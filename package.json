@@ -1,0 +1,12 @@
+{
+  "name": "chaeksori-playlist",
+  "version": "1.0.0",
+  "private": true,
+  "description": "책 분위기에 어울리는 음악 플레이리스트를 만드는 웹사이트",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

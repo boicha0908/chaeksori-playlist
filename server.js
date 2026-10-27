@@ -1,10 +1,13 @@
-// 책소리 서재의 작은 로컬 서버입니다. API 키는 브라우저로 보내지 않아요.
+// 책소리 서재 서버예요. API 키는 브라우저로 보내지 않아요.
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = __dirname;
-const PORT = 5174;
+// Render 같은 호스팅 서비스가 정해 주는 PORT를 사용해요.
+// 내 컴퓨터에서 실행할 때는 기존 주소와 포트(127.0.0.1:5174)를 사용해요.
+const PORT = Number(process.env.PORT || 5174);
+const HOST = process.env.PORT ? "0.0.0.0" : "127.0.0.1";
 const MAX_BODY = 20_000;
 
 function loadEnvFile() {
@@ -286,7 +289,11 @@ const server = http.createServer(async (request, response) => {
   await serveStatic(requestUrl.pathname, response);
 });
 
-server.listen(PORT, "127.0.0.1", () => {
-  console.log(`책소리 서재가 준비됐어요: http://127.0.0.1:${PORT}`);
-  console.log("이 검은 창을 켜 두고 브라우저에서 위 주소를 열어 주세요. 끌 때는 Ctrl+C를 누르면 됩니다.");
+server.listen(PORT, HOST, () => {
+  if (HOST === "127.0.0.1") {
+    console.log(`책소리 서재가 준비됐어요: http://127.0.0.1:${PORT}`);
+    console.log("이 검은 창을 켜 두고 브라우저에서 위 주소를 열어 주세요. 끌 때는 Ctrl+C를 누르면 됩니다.");
+  } else {
+    console.log(`책소리 서재 서버가 ${PORT} 포트에서 실행 중이에요.`);
+  }
 });
