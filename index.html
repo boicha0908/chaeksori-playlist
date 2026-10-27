@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4ead9">
+  <title>책소리 서재 · 책과 음악이 만나는 곳</title>
+  <style>
+    /* =============================
+       색을 바꾸고 싶다면 이 부분을 고쳐 보세요.
+       아래 색상 이름을 바꾸면 사이트 전체 분위기가 함께 바뀝니다.
+       ============================= */
+    :root {
+      --cream: #f7f1e7;
+      --paper: #fffdf8;
+      --sand: #ead9bf;
+      --tan: #d4b58d;
+      --brown: #69472f;
+      --deep-brown: #39291f;
+      --ink: #332920;
+      --muted: #817365;
+      --green: #6b7551;
+      --rose: #bd796b;
+      --shadow: 0 18px 45px rgba(68, 45, 27, .11);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--cream);
+      font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+      line-height: 1.55;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid #ba8d5d;
+      outline-offset: 3px;
+    }
+    button:disabled { cursor: not-allowed; opacity: .62; transform: none !important; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 13px max(22px, calc((100vw - 1100px) / 2));
+      background: rgba(255, 253, 248, .92);
+      border-bottom: 1px solid rgba(105, 71, 47, .1);
+      backdrop-filter: blur(12px);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--deep-brown);
+      font-family: Georgia, "Noto Serif KR", serif;
+      font-size: 1.18rem;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      text-decoration: none;
+    }
+    .brand-mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 14px;
+      background: #ead9bf;
+      font-size: 21px;
+    }
+    .topnav { display: flex; gap: 7px; }
+    .nav-button {
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--brown);
+      padding: 9px 14px;
+      font-size: .9rem;
+      font-weight: 750;
+    }
+    .nav-button:hover, .nav-button.active { background: #efe4d2; }
+    main { min-height: calc(100vh - 66px); }
+    .page { display: none; width: min(1060px, calc(100% - 36px)); margin: 0 auto; padding: 42px 0 70px; }
+    .page.active { display: block; animation: arrive .28s ease-out; }
+    @keyframes arrive { from { opacity: .5; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 첫 화면의 책장과 안내 데스크는 CSS로 그렸어요. */
+    .welcome-scene {
+      position: relative;
+      overflow: hidden;
+      min-height: 520px;
+      border: 1px solid rgba(91, 57, 33, .12);
+      border-radius: 34px;
+      background:
+        linear-gradient(180deg, rgba(255,250,239,.12), rgba(255,250,239,.68)),
+        repeating-linear-gradient(90deg, transparent 0 71px, rgba(91,57,33,.09) 72px 76px),
+        #c6a27c;
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+    .welcome-scene::before {
+      position: absolute;
+      z-index: -1;
+      inset: 24px 0 0;
+      content: "";
+      background:
+        linear-gradient(180deg, transparent 0 27%, rgba(91,57,33,.46) 27% 30%, transparent 30% 62%, rgba(91,57,33,.46) 62% 65%, transparent 65%),
+        repeating-linear-gradient(90deg,
+          #79543b 0 18px, #bd8e5c 18px 24px, #efe0bf 24px 29px,
+          #58705d 29px 47px, #d2ad79 47px 52px, #8c6146 52px 70px,
+          #e8d5b2 70px 76px, #9b6a48 76px 93px, #58674f 93px 111px,
+          #d0a26e 111px 119px, #704d3a 119px 140px);
+      background-size: auto, 175px 100%;
+      opacity: .84;
+    }
+    .welcome-scene::after {
+      position: absolute;
+      z-index: 3;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 132px;
+      content: "";
+      border-top: 10px solid #785136;
+      background: linear-gradient(180deg, #b9895e 0 15%, #9c704b 15% 100%);
+      box-shadow: 0 -9px 22px rgba(44, 28, 17, .15);
+    }
+    .librarian {
+      position: absolute;
+      z-index: 2;
+      top: 25px;
+      left: 50%;
+      width: min(100%, 470px);
+      transform: translateX(-50%);
+      text-align: center;
+    }
+    .librarian-bubble {
+      position: relative;
+      width: fit-content;
+      margin: 0 auto 14px;
+      padding: 13px 23px;
+      border: 1px solid rgba(82, 53, 33, .1);
+      border-radius: 20px;
+      background: var(--paper);
+      box-shadow: 0 8px 24px rgba(45, 29, 16, .15);
+      font-family: Georgia, "Noto Serif KR", serif;
+      font-size: clamp(1.35rem, 4vw, 1.9rem);
+      font-weight: 800;
+    }
+    .librarian-bubble::after {
+      position: absolute;
+      bottom: -9px;
+      left: calc(50% - 9px);
+      width: 17px;
+      height: 17px;
+      content: "";
+      transform: rotate(45deg);
+      border-right: 1px solid rgba(82, 53, 33, .1);
+      border-bottom: 1px solid rgba(82, 53, 33, .1);
+      background: var(--paper);
+    }
+    /* 좌우가 대칭인 SVG라서 다람쥐가 정면으로 보여요. */
+    .squirrel-art { display: block; width: 210px; height: 275px; margin: -4px auto -45px; overflow: visible; filter: drop-shadow(0 9px 10px rgba(59,37,20,.2)); }
+    .librarian-tag {
+      position: absolute;
+      right: calc(50% - 108px);
+      bottom: 34px;
+      padding: 5px 10px;
+      border: 2px solid #fff8ea;
+      border-radius: 999px;
+      background: var(--green);
+      color: white;
+      font-size: .74rem;
+      font-weight: 800;
+      transform: rotate(4deg);
+    }
+    .scene-caption {
+      margin: 0;
+      color: #fff9ee;
+      font-size: .86rem;
+      text-shadow: 0 1px 4px rgba(30,20,12,.45);
+    }
+    .home-intro { margin: 35px 0 20px; text-align: center; }
+    .eyebrow { margin: 0 0 8px; color: var(--green); font-size: .77rem; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; }
+    .home-intro h1, .page-heading h1 { margin: 0; color: var(--deep-brown); font-family: Georgia, "Noto Serif KR", serif; letter-spacing: -.055em; }
+    .home-intro h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
+    .home-intro p { margin: 9px 0 0; color: var(--muted); }
+    .desk-menu { position: absolute; z-index: 4; right: 0; bottom: 13px; left: 0; width: min(940px, calc(100% - 42px)); margin: 0 auto; }
+    .choice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .choice-card {
+      display: flex;
+      min-height: 88px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid rgba(105,71,47,.12);
+      border-radius: 20px;
+      background: var(--paper);
+      color: var(--ink);
+      text-align: left;
+      box-shadow: 0 5px 13px rgba(68,45,27,.13);
+      transition: transform .18s, box-shadow .18s;
+    }
+    .choice-card:hover { transform: translateY(-3px); box-shadow: 0 9px 22px rgba(68,45,27,.2); }
+    .choice-icon { display: grid; width: 52px; height: 52px; flex: 0 0 auto; place-items: center; border-radius: 17px; background: #f0e4d1; font-size: 26px; }
+    .choice-card strong { display: block; margin-bottom: 3px; color: var(--brown); font-size: 1.05rem; }
+    .choice-card small { color: var(--muted); font-size: .83rem; }
+    .book-connection { margin: 14px 0 3px; padding: 13px 15px; border-left: 4px solid #aa835d; border-radius: 9px 13px 13px 9px; background: #f7f0e5; color: #5f4a35; }
+    .book-connection strong { display: block; margin-bottom: 3px; color: var(--brown); font-size: .87rem; }
+    .book-connection p { margin: 0; font-size: .88rem; }
+    .batch-note { margin: 12px 0 0; color: var(--muted); font-size: .84rem; }
+    .batch-note:empty { display: none; }
+    .kyobo-search-box { margin-bottom: 18px; padding: 15px; border: 1px solid #e5d5bf; border-radius: 15px; background: #fbf6ed; }
+    .kyobo-search-box p { margin: 0; color: #67523e; font-size: .88rem; }
+    .kyobo-search-box strong { color: var(--brown); }
+    .kyobo-buttons { display: flex; align-items: end; gap: 10px; }
+    textarea { width: 100%; min-height: 125px; padding: 12px 13px; border: 1px solid #d9c9b4; border-radius: 12px; background: #fffefa; color: var(--ink); font: inherit; resize: vertical; }
+    .setup-guide { margin-top: 12px; color: #67523e; font-size: .84rem; }
+    .setup-guide summary { color: var(--brown); cursor: pointer; font-weight: 800; }
+
+    .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 25px; }
+    .page-heading h1 { font-size: clamp(1.8rem, 5vw, 2.35rem); }
+    .page-heading p { max-width: 650px; margin: 8px 0 0; color: var(--muted); }
+    .home-link { flex: 0 0 auto; border: 1px solid #dccbb2; border-radius: 999px; padding: 9px 14px; background: var(--paper); color: var(--brown); font-weight: 750; }
+    .panel { padding: clamp(18px, 4vw, 28px); border: 1px solid rgba(105,71,47,.12); border-radius: var(--radius); background: var(--paper); box-shadow: 0 12px 30px rgba(68,45,27,.06); }
+    .panel + .panel { margin-top: 18px; }
+    .form-row { display: flex; align-items: end; gap: 12px; }
+    #recommend-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+    #recommend-form .full-width { grid-column: 1 / -1; }
+    #recommend-form button[type="submit"] { justify-self: start; }
+    .field { display: grid; flex: 1; gap: 7px; }
+    .field label, .field-label { color: var(--brown); font-size: .89rem; font-weight: 800; }
+    input[type="text"], input[type="search"], select {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 13px;
+      border: 1px solid #d9c9b4;
+      border-radius: 12px;
+      background: #fffefa;
+      color: var(--ink);
+    }
+    input::placeholder { color: #a99b8b; }
+    .primary-button, .secondary-button, .small-button {
+      min-height: 45px;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 17px;
+      font-weight: 800;
+      transition: filter .16s, transform .16s;
+    }
+    .primary-button { background: var(--brown); color: white; }
+    .secondary-button { border: 1px solid #d9c9b4; background: #f8f1e6; color: var(--brown); }
+    .small-button { min-height: 36px; padding: 7px 11px; font-size: .82rem; }
+    .primary-button:hover, .secondary-button:hover, .small-button:hover { filter: brightness(.96); transform: translateY(-1px); }
+    .helper { margin: 8px 0 0; color: var(--muted); font-size: .82rem; }
+    .notice { margin: 15px 0 0; padding: 12px 14px; border-radius: 12px; background: #f4ecdE; color: #674d36; font-size: .9rem; }
+    .notice.warning { background: #f9e9df; color: #804935; }
+    .notice:empty { display: none; }
+    .notice[data-loading="true"] { display: flex; align-items: center; gap: 10px; }
+    .notice[data-loading="true"]::before { content: ""; width: 16px; height: 16px; flex: 0 0 16px; border: 2px solid #ddccb5; border-top-color: var(--brown); border-radius: 50%; animation: loading-spin .8s linear infinite; }
+    @keyframes loading-spin { to { transform: rotate(360deg); } }
+    .recommendation-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+    .recommendation-head h2, .section-title { margin: 0; color: var(--deep-brown); font-family: Georgia, "Noto Serif KR", serif; font-size: 1.28rem; }
+    .song-list { display: grid; gap: 9px; }
+    .song-option {
+      display: grid;
+      grid-template-columns: 24px 43px 1fr auto;
+      align-items: center;
+      gap: 11px;
+      min-height: 66px;
+      padding: 9px 12px;
+      border: 1px solid #eee3d3;
+      border-radius: 14px;
+      background: #fffefa;
+      cursor: pointer;
+    }
+    .song-option:has(input:checked) { border-color: #9a7655; background: #f8f0e5; }
+    .song-option input { accent-color: var(--brown); width: 17px; height: 17px; }
+    .song-cover { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: linear-gradient(145deg, #d9b58a, #efe2c8); font-size: 20px; }
+    .song-name { display: block; color: var(--ink); font-weight: 800; }
+    .song-artist { display: block; color: var(--muted); font-size: .82rem; }
+    .song-mood { color: var(--green); font-size: .76rem; font-weight: 750; text-align: right; }
+    .verified-song { overflow: hidden; border: 1px solid #eee3d3; border-radius: 14px; background: #fffefa; }
+    .verified-song:has(input:checked) { border-color: #9a7655; background: #f8f0e5; }
+    .verified-song .song-option { min-height: 58px; border: 0; border-radius: 0; background: transparent; }
+    .song-reason { margin: 0 13px 8px 89px; color: #695846; font-size: .84rem; }
+    .youtube-result { display: inline-block; margin: 0 13px 12px 89px; color: #85533c; font-size: .8rem; font-weight: 800; }
+    .save-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 22px; padding-top: 20px; border-top: 1px solid #eee5d8; }
+    .full-width { grid-column: 1 / -1; }
+    input[type="file"] { width: 100%; padding: 10px; border: 1px dashed #c8b49a; border-radius: 12px; background: #fffefa; color: var(--muted); }
+    .cover-preview { display: none; width: 110px; height: 110px; object-fit: cover; border-radius: 16px; border: 1px solid #e6d9c7; }
+    .cover-preview.visible { display: block; }
+    .form-actions { display: flex; align-items: center; gap: 10px; }
+    .search-tools { display: flex; gap: 10px; }
+    .search-tools .field { min-width: 0; }
+    .playlist-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-top: 18px; }
+    .playlist-card { overflow: hidden; border: 1px solid rgba(105,71,47,.12); border-radius: 18px; background: var(--paper); box-shadow: 0 10px 24px rgba(68,45,27,.06); }
+    .track-summary a { color: #85533c; text-decoration-color: #c9aa8c; text-underline-offset: 3px; }
+    .track-summary a:hover { color: var(--deep-brown); }
+    .playlist-art { position: relative; display: grid; height: 172px; place-items: center; overflow: hidden; background: linear-gradient(145deg, #d9b58a, #f0e4d1); }
+    .playlist-art::before { position: absolute; inset: -40%; content: ""; background: repeating-linear-gradient(135deg, transparent 0 18px, rgba(255,255,255,.16) 18px 22px); transform: rotate(-8deg); }
+    .playlist-art img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+    .playlist-art-emoji { position: relative; font-size: 50px; filter: drop-shadow(0 4px 5px rgba(63,43,25,.14)); }
+    .playlist-info { padding: 15px; }
+    .playlist-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 9px; background: #f1e7d8; color: #73563b; font-size: .72rem; font-weight: 800; }
+    .pill.own { background: #e6ebdf; color: #4e633e; }
+    .playlist-info h3 { margin: 0; color: var(--deep-brown); font-size: 1.07rem; }
+    .playlist-book { margin: 3px 0 11px; color: var(--muted); font-size: .83rem; }
+    .playlist-note { margin: -5px 0 10px; color: var(--muted); font-size: .8rem; line-height: 1.55; }
+    .track-summary { min-height: 63px; margin: 0 0 12px; padding: 0; list-style: none; color: #5f5346; font-size: .81rem; }
+    .track-summary li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card-bottom { display: grid; gap: 8px; }
+    .card-bottom select { min-height: 38px; padding: 6px 9px; font-size: .82rem; }
+    .empty-state { grid-column: 1 / -1; padding: 32px 18px; border: 1px dashed #d7c5ad; border-radius: 18px; color: var(--muted); text-align: center; }
+    .library-tools { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
+    .library-tools .field { min-width: 190px; flex: 0 1 250px; }
+    .folder-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .folder-chip { border: 1px solid #ddcbb4; border-radius: 999px; padding: 7px 12px; background: #fffaf2; color: var(--brown); font-size: .82rem; font-weight: 750; }
+    .folder-chip.selected { border-color: var(--brown); background: var(--brown); color: white; }
+    footer { padding: 22px; color: #8c7b68; text-align: center; font-size: .78rem; }
+
+    @media (max-width: 760px) {
+      .topbar { flex-wrap: wrap; padding: 10px 14px; gap: 7px; }
+      .brand { font-size: 1.04rem; }
+      .topnav { width: 100%; justify-content: space-between; gap: 2px; }
+      .nav-button { flex: 1; padding: 8px 6px; font-size: .81rem; }
+      .page { width: min(100% - 24px, 600px); padding: 26px 0 48px; }
+      .welcome-scene { min-height: 465px; border-radius: 25px; }
+      .welcome-scene::after { height: 122px; }
+      .librarian { top: 20px; }
+      .librarian-bubble { margin-bottom: 7px; padding: 10px 17px; font-size: 1.35rem; }
+      .squirrel-art { width: 185px; height: 245px; margin-bottom: -42px; }
+      .librarian-tag { right: calc(50% - 96px); bottom: 30px; font-size: .68rem; }
+      .desk-menu { bottom: 13px; width: calc(100% - 22px); }
+      .choice-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+      .choice-card { min-height: 84px; flex-direction: column; justify-content: center; gap: 4px; padding: 7px 3px; border-radius: 14px; text-align: center; }
+      .choice-icon { width: 35px; height: 35px; border-radius: 11px; font-size: 20px; }
+      .choice-card strong { margin: 0; font-size: .79rem; }
+      .choice-card small { display: none; }
+      .page-heading { align-items: start; flex-direction: column; }
+      .form-row, .search-tools { align-items: stretch; flex-direction: column; }
+      .form-row .primary-button, .search-tools .primary-button { width: 100%; }
+      #recommend-form { grid-template-columns: 1fr; }
+      #recommend-form .full-width { grid-column: auto; }
+      #recommend-form button[type="submit"] { justify-self: stretch; }
+      .kyobo-buttons { align-items: stretch; flex-direction: column; }
+      .kyobo-buttons button { width: 100%; }
+      .playlist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .playlist-art { height: 135px; }
+      .playlist-info { padding: 12px; }
+      .song-option { grid-template-columns: 20px 38px 1fr; gap: 8px; padding: 8px; }
+      .song-cover { width: 37px; height: 37px; }
+      .song-mood { grid-column: 3; text-align: left; margin-top: -7px; }
+      .song-reason { margin-left: 74px; }
+      .youtube-result { margin-left: 74px; }
+      .save-form { grid-template-columns: 1fr; }
+      .full-width { grid-column: auto; }
+    }
+    @media (max-width: 410px) {
+      .playlist-grid { grid-template-columns: 1fr; }
+      .playlist-art { height: 180px; }
+      .welcome-scene { min-height: 455px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home" data-page="home" aria-label="책소리 서재 처음 화면">
+      <span class="brand-mark" aria-hidden="true">📚</span><span>책소리 서재</span>
+    </a>
+    <nav class="topnav" aria-label="주요 메뉴">
+      <button class="nav-button" type="button" data-page="create">플리 생성</button>
+      <button class="nav-button" type="button" data-page="explore">플리 탐색</button>
+      <button class="nav-button" type="button" data-page="library">나의 서재</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page active" id="page-home" aria-labelledby="home-title">
+      <div class="welcome-scene">
+        <div class="librarian">
+          <div class="librarian-bubble">무엇을 도와드릴까요?</div>
+          <svg class="squirrel-art" viewBox="0 0 220 250" role="img" aria-label="정면을 바라보는 갈색 다람쥐 사서" xmlns="http://www.w3.org/2000/svg">
+            <!-- 꼬리와 몸은 안내 데스크 뒤로 살짝 보입니다. -->
+            <path d="M54 178C20 176 19 145 35 132C12 122 18 92 42 88C48 108 65 116 78 115" fill="#84512f" stroke="#693f27" stroke-width="5" stroke-linejoin="round"/>
+            <path d="M35 136C47 139 53 148 53 161" fill="none" stroke="#d4a06a" stroke-width="7" stroke-linecap="round"/>
+            <ellipse cx="73" cy="57" rx="31" ry="38" fill="#8c5734"/>
+            <ellipse cx="147" cy="57" rx="31" ry="38" fill="#8c5734"/>
+            <ellipse cx="73" cy="61" rx="16" ry="23" fill="#dfa47d"/>
+            <ellipse cx="147" cy="61" rx="16" ry="23" fill="#dfa47d"/>
+            <path d="M39 103C39 57 66 28 110 28C154 28 181 57 181 103C181 149 151 174 110 174C69 174 39 149 39 103Z" fill="#9a6037" stroke="#70442b" stroke-width="5"/>
+            <ellipse cx="110" cy="119" rx="54" ry="43" fill="#f3dfc0"/>
+            <ellipse cx="83" cy="119" rx="20" ry="15" fill="#f7e9d4"/>
+            <ellipse cx="137" cy="119" rx="20" ry="15" fill="#f7e9d4"/>
+            <ellipse cx="82" cy="94" rx="7" ry="9" fill="#33251d"/>
+            <ellipse cx="138" cy="94" rx="7" ry="9" fill="#33251d"/>
+            <circle cx="84" cy="91" r="2.2" fill="#fffaf2"/>
+            <circle cx="140" cy="91" r="2.2" fill="#fffaf2"/>
+            <!-- 둥근 안경을 좌우 대칭으로 그려 정면을 바라보는 인상을 줍니다. -->
+            <circle cx="82" cy="95" r="19" fill="none" stroke="#68452f" stroke-width="3.5"/>
+            <circle cx="138" cy="95" r="19" fill="none" stroke="#68452f" stroke-width="3.5"/>
+            <path d="M101 95H119" stroke="#68452f" stroke-width="3.5" stroke-linecap="round"/>
+            <ellipse cx="110" cy="117" rx="7" ry="5" fill="#70412d"/>
+            <path d="M110 122C107 131 98 133 94 128M110 122C113 131 122 133 126 128" fill="none" stroke="#70412d" stroke-width="3" stroke-linecap="round"/>
+            <path d="M77 165C84 151 97 146 110 146C123 146 136 151 143 165L151 205H69Z" fill="#f6ead5" stroke="#80512f" stroke-width="4"/>
+            <path d="M99 163L110 172L121 163L117 185H103Z" fill="#74805b"/>
+            <path d="M110 172V205" stroke="#d1b994" stroke-width="3"/>
+          </svg>
+          <p class="scene-caption">책장 사이에서 음악을 골라 드릴게요</p>
+          <span class="librarian-tag">오늘의 사서</span>
+        </div>
+        <div class="desk-menu">
+          <div class="choice-grid" aria-label="안내 데스크 메뉴">
+            <button class="choice-card" type="button" data-page="create">
+              <span class="choice-icon" aria-hidden="true">🎼</span><span><strong>플리 생성</strong><small>책에 어울리는 곡 고르기</small></span>
+            </button>
+            <button class="choice-card" type="button" data-page="explore">
+              <span class="choice-icon" aria-hidden="true">🔎</span><span><strong>플리 탐색</strong><small>다른 독서가의 플리 둘러보기</small></span>
+            </button>
+            <button class="choice-card" type="button" data-page="library">
+              <span class="choice-icon" aria-hidden="true">📖</span><span><strong>나의 서재</strong><small>내 플레이리스트 보관하기</small></span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="home-intro">
+        <p class="eyebrow">A little music for your reading</p>
+        <h1 id="home-title">책장을 넘기는 순간, 음악도 함께</h1>
+        <p>읽고 있는 책에 어울리는 노래를 모아 나만의 서재를 만들어 보세요.</p>
+      </div>
+    </section>
+
+    <section class="page" id="page-create" aria-labelledby="create-title">
+      <div class="page-heading">
+        <div><p class="eyebrow">Make your reading playlist</p><h1 id="create-title">책에 어울리는 플리 만들기</h1><p>책 제목을 입력하고, 마음에 드는 곡을 골라 플레이리스트로 저장해요.</p></div>
+        <button class="home-link" type="button" data-page="home">← 처음으로</button>
+      </div>
+      <div class="panel">
+        <div class="kyobo-search-box">
+          <p><strong>책 소개를 읽고 맞춤 추천하기</strong><br>교보문고 검색 결과를 열어 책 소개를 복사한 뒤 아래 칸에 붙여넣어 주세요. 서버가 AI로 곡 후보를 고르고 YouTube 검색 결과를 확인합니다. 책 소개를 자동으로 가져오는 교보문고 공개 API는 확인되지 않아, 소개 복사는 직접 해야 해요.</p>
+          <details class="setup-guide"><summary>처음 실행할 때 준비할 것</summary><ol><li>폴더 안의 <code>.env.example</code>을 복사해 <code>.env</code>라는 이름으로 저장합니다.</li><li><code>.env</code>에 Gemini API 키와 YouTube Data API 키를 입력합니다. 키는 이 파일과 서버에만 두고 다른 사람에게 보내지 마세요.</li><li><code>start-local.bat</code>을 실행한 뒤, 브라우저에서 <code>http://127.0.0.1:5174</code>를 엽니다. <code>index.html</code>을 직접 열면 API 추천은 작동하지 않아요.</li></ol><p>Gemini 무료 사용량에는 모델별 요청 제한이 있고, 무료 입력은 Google 제품 개선에 사용될 수 있어요. YouTube에서 제목과 아티스트가 함께 검색되는 곡만 표시하지만, 영상이 공식 업로드인지까지 자동으로 보증하지는 않으니 결과를 직접 확인해 주세요.</p></details>
+        </div>
+        <form id="recommend-form" class="form-row">
+          <div class="field"><label for="book-input">어떤 책을 읽고 있나요?</label><input id="book-input" type="text" maxlength="120" placeholder="예: 불편한 편의점" autocomplete="off"></div>
+          <div class="kyobo-buttons"><button class="secondary-button" id="kyobo-search-button" type="button">교보문고에서 검색</button></div>
+          <div class="field full-width"><label for="book-description">교보문고 책 소개</label><textarea id="book-description" maxlength="10000" placeholder="교보문고 책 페이지의 소개 중 일부를 복사해 붙여넣어 주세요."></textarea></div>
+          <button class="primary-button full-width" type="submit">책 소개를 바탕으로 곡 추천받기</button>
+        </form>
+        <p class="helper">AI가 책 소개에서 분위기와 주제를 찾고, 실제 YouTube 검색 결과와 대조해 곡을 골라요. 전에 나온 곡은 다시 추천하지 않아요.</p>
+        <p class="notice" id="recommend-notice" role="status" aria-live="polite"></p>
+        <div class="book-connection" id="book-connection" hidden><strong>책 내용과 곡이 어울리는 이유</strong><p id="connection-text"></p></div>
+      </div>
+      <div id="recommend-results" hidden>
+        <div class="panel" style="margin-top:18px">
+          <div class="recommendation-head"><h2 id="recommend-heading">추천 곡</h2><button class="secondary-button small-button" id="regenerate-button" type="button">↻ 다시 추천</button></div>
+          <div class="song-list" id="song-list"></div>
+          <p class="batch-note" id="batch-note" role="status" aria-live="polite"></p>
+          <form id="save-playlist-form" class="save-form">
+            <div class="field"><label for="playlist-title">플레이리스트 제목</label><input id="playlist-title" type="text" maxlength="60" placeholder="예: 비 오는 날의 책장"></div>
+            <div class="field"><label for="create-folder">저장할 서재 폴더</label><select id="create-folder"></select></div>
+            <div class="field full-width"><label for="cover-file">표지 사진 고르기 (선택)</label><input id="cover-file" type="file" accept="image/*"><p class="helper">사진을 고르지 않으면 따뜻한 기본 표지가 사용돼요. 이미지 파일은 1.5MB 이하로 골라 주세요.</p></div>
+            <img class="cover-preview full-width" id="cover-preview" alt="고른 표지 사진 미리보기">
+            <div class="form-actions full-width"><button class="primary-button" type="submit">내 서재에 저장</button><span class="helper" id="selected-count">곡을 먼저 골라 주세요.</span></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-explore" aria-labelledby="explore-title">
+      <div class="page-heading">
+        <div><p class="eyebrow">Browse reading playlists</p><h1 id="explore-title">다른 독서가의 플리 탐색</h1><p>책 제목으로 찾아보고 마음에 드는 플레이리스트를 내 서재에 담아요.</p></div>
+        <button class="home-link" type="button" data-page="home">← 처음으로</button>
+      </div>
+      <div class="panel">
+        <form id="search-form" class="search-tools">
+          <div class="field"><label for="search-book">책 제목 검색</label><input id="search-book" type="search" maxlength="80" placeholder="책 제목을 입력하세요"></div>
+          <button class="primary-button" type="submit">검색하기</button>
+        </form>
+        <p class="helper">수업용으로 준비한 예시 공개 플리예요. 실제 인터넷의 다른 사람과 연결되지는 않아요.</p>
+        <p class="notice" id="search-notice" role="status" aria-live="polite"></p>
+      </div>
+      <div class="playlist-grid" id="explore-grid" aria-live="polite"></div>
+    </section>
+
+    <section class="page" id="page-library" aria-labelledby="library-title">
+      <div class="page-heading">
+        <div><p class="eyebrow">Your personal bookshelf</p><h1 id="library-title">나의 서재</h1><p>내가 만든 플리와 탐색에서 담아 온 플리를 폴더별로 정리해요.</p></div>
+        <button class="home-link" type="button" data-page="home">← 처음으로</button>
+      </div>
+      <div class="panel">
+        <div class="library-tools">
+          <div class="field"><label for="library-folder-filter">보고 싶은 폴더</label><select id="library-folder-filter"></select></div>
+          <button class="secondary-button" type="button" id="add-folder-button">＋ 새 폴더 만들기</button>
+        </div>
+        <div id="folder-chips" class="folder-list" aria-label="서재 폴더 빠른 선택"></div>
+        <p class="helper">폴더를 만들고 각 카드의 메뉴에서 플리를 다른 폴더로 옮길 수 있어요.</p>
+        <p class="notice" id="library-notice" role="status" aria-live="polite"></p>
+      </div>
+      <div class="playlist-grid" id="library-grid" aria-live="polite"></div>
+    </section>
+  </main>
+  <footer>책소리 서재 · 이 브라우저 안에 나만의 독서 음악을 차곡차곡</footer>
+
+  <script>
+    /* 예시 공개 플레이리스트예요. 실제 다른 이용자와 공유되는 자료는 아닙니다.
+       곡을 더 추가할 때는 { title, artist, videoUrl } 형태로 적고, YouTube 주소를 확인해 주세요. */
+    const COMMUNITY_PLAYLISTS = [
+      { id: "sample-1", title: "야간 편의점의 작은 위로", book: "불편한 편의점", emoji: "☕", note: "낯선 사람들의 다정한 만남처럼, 조용히 마음을 데워 주는 곡을 골랐어요.", songs: [
+        { title: "밤편지", artist: "아이유", videoUrl: "https://www.youtube.com/watch?v=NnRjwEhFU70" },
+        { title: "선물", artist: "멜로망스", videoUrl: "https://www.youtube.com/watch?v=qYYJqWsBb1U" },
+        { title: "우주를 줄게", artist: "볼빨간사춘기", videoUrl: "https://www.youtube.com/watch?v=9U8uA702xrE" }
+      ] },
+      { id: "sample-2", title: "마음이 자라는 속도", book: "아몬드", emoji: "🌱", note: "감정을 알아 가고 관계를 맺는 이야기의 여운을 생각하며, 다정하고 희망적인 곡을 골랐어요.", songs: [
+        { title: "봄날", artist: "방탄소년단", videoUrl: "https://www.youtube.com/watch?v=xEeFrLSkMm8" },
+        { title: "선물", artist: "멜로망스", videoUrl: "https://www.youtube.com/watch?v=qYYJqWsBb1U" },
+        { title: "밤편지", artist: "아이유", videoUrl: "https://www.youtube.com/watch?v=NnRjwEhFU70" }
+      ] },
+      { id: "sample-3", title: "꿈을 고르는 밤", book: "달러구트 꿈 백화점", emoji: "🌙", note: "꿈처럼 부드러운 멜로디와 반짝이는 느낌의 곡으로 밤의 상상력을 표현했어요.", songs: [
+        { title: "Dream", artist: "수지, 백현", videoUrl: "https://www.youtube.com/watch?v=WfYgbFBFe1E" },
+        { title: "Hedwig's Theme", artist: "John Williams", videoUrl: "https://www.youtube.com/watch?v=wtHra9tFISY" },
+        { title: "우주를 줄게", artist: "볼빨간사춘기", videoUrl: "https://www.youtube.com/watch?v=9U8uA702xrE" }
+      ] },
+      { id: "sample-4", title: "별을 따라가는 여행", book: "어린 왕자", emoji: "🪐", note: "별과 여행을 떠올리게 하는 노래, 그리고 외로움 속에서도 따뜻한 시선을 담은 곡을 모았어요.", songs: [
+        { title: "Vincent", artist: "Don McLean", videoUrl: "https://www.youtube.com/watch?v=MkUsi0aPmzU" },
+        { title: "Dream", artist: "수지, 백현", videoUrl: "https://www.youtube.com/watch?v=WfYgbFBFe1E" },
+        { title: "밤편지", artist: "아이유", videoUrl: "https://www.youtube.com/watch?v=NnRjwEhFU70" }
+      ] },
+      { id: "sample-5", title: "나를 찾아가는 플레이리스트", book: "데미안", emoji: "🪞", note: "자기만의 길을 찾아가는 성장 이야기와 어울리도록, 그리움과 희망이 함께 느껴지는 곡을 담았어요.", songs: [
+        { title: "봄날", artist: "방탄소년단", videoUrl: "https://www.youtube.com/watch?v=xEeFrLSkMm8" },
+        { title: "Vincent", artist: "Don McLean", videoUrl: "https://www.youtube.com/watch?v=MkUsi0aPmzU" },
+        { title: "선물", artist: "멜로망스", videoUrl: "https://www.youtube.com/watch?v=qYYJqWsBb1U" }
+      ] },
+      { id: "sample-6", title: "마법 학교 입학 첫날", book: "해리 포터와 마법사의 돌", emoji: "✨", note: "웅장한 오케스트라와 희망찬 분위기의 곡으로 마법 세계의 첫 모험을 떠올려요.", songs: [
+        { title: "Hedwig's Theme", artist: "John Williams", videoUrl: "https://www.youtube.com/watch?v=wtHra9tFISY" },
+        { title: "봄날", artist: "방탄소년단", videoUrl: "https://www.youtube.com/watch?v=xEeFrLSkMm8" },
+        { title: "Dream", artist: "수지, 백현", videoUrl: "https://www.youtube.com/watch?v=WfYgbFBFe1E" }
+      ] }
+    ];
+
+    const STORAGE_KEY = "chaeksori-library-v1";
+    const DEFAULT_FOLDER = "책상 위";
+    let appData = loadData();
+    let currentSongs = [];
+    let currentBook = "";
+    let seenSongKeys = new Set();
+    let coverData = "";
+    let lastExploreResults = COMMUNITY_PLAYLISTS;
+
+    function loadData() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (saved && Array.isArray(saved.playlists) && Array.isArray(saved.folders)) {
+          if (!saved.folders.includes(DEFAULT_FOLDER)) saved.folders.unshift(DEFAULT_FOLDER);
+          return saved;
+        }
+      } catch (error) { console.warn("저장된 서재를 읽지 못했어요.", error); }
+      return { folders: [DEFAULT_FOLDER], playlists: [] };
+    }
+
+    function persistData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        return true;
+      } catch (error) {
+        alert("브라우저 저장 공간이 부족해 저장하지 못했어요. 표지 사진을 더 작은 파일로 골라 주세요.");
+        return false;
+      }
+    }
+
+    function normalize(text) { return text.toLocaleLowerCase("ko-KR").replace(/[\s\p{P}\p{S}]/gu, ""); }
+    function showPage(pageName) {
+      document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.id === `page-${pageName}`));
+      document.querySelectorAll(".nav-button").forEach(button => button.classList.toggle("active", button.dataset.page === pageName));
+      if (pageName === "create") renderFolderOptions();
+      if (pageName === "explore") renderExplore(lastExploreResults);
+      if (pageName === "library") renderLibrary();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.querySelectorAll("[data-page]").forEach(button => {
+      button.addEventListener("click", event => {
+        event.preventDefault();
+        showPage(button.dataset.page);
+      });
+    });
+
+    const recommendForm = document.getElementById("recommend-form");
+    const bookInput = document.getElementById("book-input");
+    const bookDescription = document.getElementById("book-description");
+    const recommendationNotice = document.getElementById("recommend-notice");
+    recommendForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const book = bookInput.value.trim();
+      if (!book) {
+        recommendationNotice.textContent = "책 제목을 먼저 적어 주세요.";
+        recommendationNotice.classList.add("warning");
+        bookInput.focus();
+        return;
+      }
+      if (!bookDescription.value.trim()) {
+        recommendationNotice.textContent = "교보문고에서 책 소개를 복사해 아래 칸에 붙여넣어 주세요. 그래야 책 분위기를 바탕으로 곡을 고를 수 있어요.";
+        recommendationNotice.classList.add("warning");
+        bookDescription.focus();
+        return;
+      }
+      recommendBook(book);
+    });
+
+    document.getElementById("kyobo-search-button").addEventListener("click", () => {
+      const query = bookInput.value.trim();
+      if (!query) {
+        recommendationNotice.textContent = "교보문고에서 찾을 책 제목을 먼저 적어 주세요.";
+        recommendationNotice.classList.add("warning");
+        bookInput.focus();
+        return;
+      }
+      const kyoboUrl = `https://search.kyobobook.co.kr/search?gbCode=TOT&keyword=${encodeURIComponent(query)}&target=total`;
+      window.open(kyoboUrl, "_blank", "noopener,noreferrer");
+      recommendationNotice.classList.remove("warning");
+      recommendationNotice.textContent = "교보문고 검색 탭을 열었어요. 책 소개를 복사해 아래 소개 칸에 붙여넣은 뒤 곡을 추천받아 주세요.";
+    });
+
+    function recommendBook(bookTitle) {
+      if (normalize(currentBook) !== normalize(bookTitle)) seenSongKeys = new Set();
+      currentBook = bookTitle;
+      currentSongs = [];
+      renderSongs();
+      recommendationNotice.classList.remove("warning");
+      recommendationNotice.textContent = "Gemini가 책의 분위기를 살피고 곡을 고르면, 후보 5곡을 YouTube에서 동시에 확인해요…";
+      document.getElementById("book-connection").hidden = true;
+      document.getElementById("recommend-results").hidden = false;
+      document.getElementById("recommend-heading").textContent = `“${bookTitle}”과 함께 들을 곡`;
+      document.getElementById("playlist-title").value = `${bookTitle} 읽을 때 듣는 플리`;
+      document.getElementById("cover-file").value = "";
+      coverData = "";
+      document.getElementById("cover-preview").classList.remove("visible");
+      renderFolderOptions();
+      document.getElementById("recommend-results").scrollIntoView({ behavior: "smooth", block: "start" });
+      requestRecommendations();
+    }
+
+    document.getElementById("regenerate-button").addEventListener("click", () => {
+      requestRecommendations();
+    });
+
+    // 가수가 달라도 곡 제목이 같으면 같은 곡으로 취급해 다시 보여 주지 않아요.
+    function songKey(song) { return normalize(song.title); }
+
+    async function requestRecommendations() {
+      const regenerateButton = document.getElementById("regenerate-button");
+      const batchNote = document.getElementById("batch-note");
+      const submitButton = recommendForm.querySelector('button[type="submit"]');
+      const wasFirstRequest = seenSongKeys.size === 0;
+      regenerateButton.disabled = true;
+      submitButton.disabled = true;
+      regenerateButton.textContent = "새 곡 찾는 중…";
+      recommendationNotice.classList.remove("warning");
+      recommendationNotice.dataset.loading = "true";
+      recommendationNotice.setAttribute("aria-busy", "true");
+      recommendationNotice.textContent = "Gemini 추천을 만드는 중이에요. 이어서 후보곡 5개를 YouTube에서 동시에 확인합니다…";
+      batchNote.textContent = "이미 보여드린 곡은 제외하고 있어요. YouTube 검색을 동시에 진행해 기다리는 시간을 줄이고 있습니다.";
+      try {
+        const response = await fetch("/api/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookTitle: currentBook, bookDescription: bookDescription.value.trim(), avoid: [...seenSongKeys] }),
+          signal: AbortSignal.timeout(40_000)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "추천 요청을 처리하지 못했어요.");
+        const incoming = (data.songs || []).filter(song => song?.title && song?.artist && song?.videoUrl && !seenSongKeys.has(songKey(song)));
+        incoming.forEach(song => seenSongKeys.add(songKey(song)));
+        currentSongs = incoming.slice(0, 5);
+        renderSongs();
+        if (wasFirstRequest && data.connection) {
+          document.getElementById("connection-text").textContent = data.connection;
+          document.getElementById("book-connection").hidden = false;
+        }
+        document.getElementById("recommend-heading").textContent = `“${currentBook}”과 함께 들을 곡`;
+        recommendationNotice.classList.remove("warning");
+        recommendationNotice.textContent = currentSongs.length
+          ? `책 소개와 어울리고 YouTube에서 검색 결과를 확인한 곡 ${currentSongs.length}개를 찾았어요. 영상 링크를 눌러 직접 들어볼 수 있어요.`
+          : "전에 나온 곡을 제외하고 YouTube에서 확인되는 새 곡을 찾지 못했어요. 책 소개를 조금 더 자세히 붙여넣거나 나중에 다시 시도해 주세요.";
+        batchNote.textContent = currentSongs.length ? "다시 추천을 눌러도 이미 본 곡 제목은 다시 나오지 않아요." : "현재 선택한 곡이 없어요. 이전에 저장한 곡은 그대로 서재에 있어요.";
+      } catch (error) {
+        recommendationNotice.textContent = error.name === "TimeoutError"
+          ? "40초 동안 응답이 없어 요청을 멈췄어요. 인터넷 연결을 확인하고 다시 눌러 주세요."
+          : error.message.includes("Failed to fetch")
+            ? "서버에 연결되지 않았어요. start-local.bat을 실행하고 http://127.0.0.1:5174 주소로 사이트를 열었는지 확인해 주세요."
+            : error.message;
+        recommendationNotice.classList.add("warning");
+        batchNote.textContent = "키 설정과 인터넷 연결을 확인한 뒤 다시 시도해 주세요.";
+      } finally {
+        delete recommendationNotice.dataset.loading;
+        recommendationNotice.setAttribute("aria-busy", "false");
+        regenerateButton.disabled = false;
+        regenerateButton.textContent = "↻ 다른 곡 다시 추천";
+        submitButton.disabled = false;
+      }
+    }
+
+    function renderSongs() {
+      const songList = document.getElementById("song-list");
+      songList.replaceChildren();
+      currentSongs.forEach((song, index) => {
+        const card = document.createElement("div");
+        card.className = "verified-song";
+        const label = document.createElement("label");
+        label.className = "song-option";
+        label.innerHTML = `<input type="checkbox" name="picked-song" value="${index}" aria-label="${escapeHtml(song.title)} 선택"><span class="song-cover" aria-hidden="true">♪</span><span><span class="song-name">${escapeHtml(song.title)}</span><span class="song-artist">${escapeHtml(song.artist)}</span></span><span class="song-mood">${escapeHtml(song.mood || "책 분위기에 어울리는 곡")}</span>`;
+        label.querySelector("input").addEventListener("change", updateSelectedCount);
+        const reason = document.createElement("p");
+        reason.className = "song-reason";
+        reason.textContent = song.reason || "책 소개의 분위기와 연결해 추천했어요.";
+        const link = document.createElement("a");
+        link.className = "youtube-result";
+        link.href = song.videoUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = `${song.officialSignal ? "공식/VEVO/Topic 표시 결과 · " : "YouTube 검색 결과 · "}${song.videoTitle || song.title} · ${song.channelTitle || song.artist}`;
+        card.append(label, reason, link);
+        songList.append(card);
+      });
+      updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+      const count = document.querySelectorAll('input[name="picked-song"]:checked').length;
+      document.getElementById("selected-count").textContent = count ? `${count}곡을 선택했어요.` : "곡을 먼저 골라 주세요.";
+    }
+
+    document.getElementById("cover-file").addEventListener("change", event => {
+      const file = event.target.files[0];
+      const preview = document.getElementById("cover-preview");
+      if (!file) { coverData = ""; preview.classList.remove("visible"); return; }
+      if (!file.type.startsWith("image/")) {
+        alert("이미지 파일을 골라 주세요."); event.target.value = ""; coverData = ""; preview.classList.remove("visible"); return;
+      }
+      if (file.size > 1.5 * 1024 * 1024) {
+        alert("사진 파일이 커요. 1.5MB보다 작은 이미지를 골라 주세요."); event.target.value = ""; coverData = ""; preview.classList.remove("visible"); return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => { coverData = String(reader.result); preview.src = coverData; preview.classList.add("visible"); };
+      reader.onerror = () => alert("사진을 읽지 못했어요. 다른 이미지 파일을 골라 주세요.");
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById("save-playlist-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const title = document.getElementById("playlist-title").value.trim();
+      const chosen = [...document.querySelectorAll('input[name="picked-song"]:checked')].map(input => currentSongs[Number(input.value)]);
+      if (!chosen.length) { alert("플레이리스트에 담을 곡을 한 곡 이상 골라 주세요."); return; }
+      if (!title) { alert("플레이리스트 제목을 적어 주세요."); document.getElementById("playlist-title").focus(); return; }
+      appData.playlists.unshift({ id: makeId(), title, book: currentBook, songs: chosen, cover: coverData, kind: "own", folder: document.getElementById("create-folder").value || DEFAULT_FOLDER, createdAt: Date.now() });
+      if (!persistData()) { appData.playlists.shift(); return; }
+      alert("플레이리스트를 나의 서재에 저장했어요!");
+      document.getElementById("save-playlist-form").reset();
+      coverData = "";
+      document.getElementById("cover-preview").classList.remove("visible");
+      document.querySelectorAll('input[name="picked-song"]').forEach(input => input.checked = false);
+      updateSelectedCount();
+      showPage("library");
+    });
+
+    function makeId() { return `playlist-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+    function safeYouTubeUrl(value) {
+      try {
+        const url = new URL(String(value || ""));
+        const validHost = ["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"].includes(url.hostname);
+        const validVideo = (url.pathname === "/watch" && url.searchParams.has("v")) || (url.hostname === "youtu.be" && url.pathname.length > 1);
+        return url.protocol === "https:" && validHost && validVideo ? url.href : "";
+      } catch {
+        return "";
+      }
+    }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+    }
+
+    document.getElementById("search-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const query = document.getElementById("search-book").value.trim();
+      const notice = document.getElementById("search-notice");
+      if (!query) {
+        notice.textContent = "찾고 싶은 책 제목을 입력해 주세요.";
+        notice.classList.add("warning");
+        document.getElementById("search-book").focus();
+        return;
+      }
+      lastExploreResults = COMMUNITY_PLAYLISTS.filter(playlist => normalize(playlist.book).includes(normalize(query)) || normalize(playlist.title).includes(normalize(query)));
+      notice.classList.remove("warning");
+      notice.textContent = lastExploreResults.length ? `${lastExploreResults.length}개의 예시 플레이리스트를 찾았어요.` : `“${query}”로 만든 예시 플레이리스트가 없어요. 책 제목 일부로 다시 검색해 보세요.`;
+      renderExplore(lastExploreResults);
+    });
+
+    function renderExplore(playlists) {
+      const grid = document.getElementById("explore-grid");
+      grid.replaceChildren();
+      if (!playlists.length) {
+        grid.innerHTML = '<div class="empty-state">검색 결과가 여기에 보여요.<br>책 제목을 입력하고 검색해 주세요.</div>';
+        return;
+      }
+      playlists.forEach(playlist => grid.append(makePlaylistCard(playlist, "explore")));
+    }
+
+    function makePlaylistCard(playlist, source) {
+      const card = document.createElement("article");
+      card.className = "playlist-card";
+      const ownerPill = source === "library" && playlist.kind === "own"
+        ? '<span class="pill own">내가 만들었어요</span>'
+        : source === "library"
+          ? '<span class="pill">탐색에서 담았어요</span>'
+          : '<span class="pill">예시 공개 플리</span>';
+      // 예전에 서재에 담아 둔 예시 플리도 새 YouTube 링크로 보여 줘요.
+      const savedSample = source === "library" && playlist.kind === "collected"
+        ? COMMUNITY_PLAYLISTS.find(item => item.id === playlist.communityId)
+        : null;
+      const savedSongsNeedLinks = (playlist.songs || []).some(song => !safeYouTubeUrl(song.videoUrl));
+      const songsToShow = savedSample && savedSongsNeedLinks ? savedSample.songs : (playlist.songs || []);
+      const songRows = songsToShow.slice(0, 4).map(song => {
+        const songTitle = Array.isArray(song) ? song[0] : song.title;
+        const songArtist = Array.isArray(song) ? song[1] : song.artist;
+        const label = `♪ ${songTitle || "제목 없는 곡"} · ${songArtist || "아티스트 정보 없음"}`;
+        const videoUrl = safeYouTubeUrl(song.videoUrl);
+        return videoUrl
+          ? `<li><a href="${escapeHtml(videoUrl)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)} YouTube에서 열기">${escapeHtml(label)}</a></li>`
+          : `<li>${escapeHtml(label)}</li>`;
+      }).join("");
+      const cover = playlist.cover ? `<img src="${playlist.cover}" alt="${escapeHtml(playlist.title)} 표지">` : `<span class="playlist-art-emoji" aria-hidden="true">${escapeHtml(playlist.emoji || "🎧")}</span>`;
+      const action = source === "explore"
+        ? `<button class="primary-button small-button" type="button" data-action="collect" data-id="${escapeHtml(playlist.id)}">내 서재에 담기</button>`
+        : `<div class="card-bottom"><label class="field"><span class="field-label">폴더 옮기기</span><select data-action="move" data-id="${escapeHtml(playlist.id)}">${folderOptionsHtml(playlist.folder)}</select></label></div>`;
+      card.innerHTML = `<div class="playlist-art">${cover}</div><div class="playlist-info"><div class="playlist-meta">${ownerPill}<span class="pill">📁 ${escapeHtml(playlist.folder || "책상 위")}</span></div><h3>${escapeHtml(playlist.title)}</h3><p class="playlist-book">📚 ${escapeHtml(playlist.book)}</p>${playlist.note ? `<p class="playlist-note">${escapeHtml(playlist.note)}</p>` : ""}<ul class="track-summary">${songRows}</ul>${action}</div>`;
+      const collectButton = card.querySelector('[data-action="collect"]');
+      if (collectButton) collectButton.addEventListener("click", () => collectPlaylist(playlist));
+      const moveSelect = card.querySelector('[data-action="move"]');
+      if (moveSelect) moveSelect.addEventListener("change", () => movePlaylist(playlist.id, moveSelect.value));
+      return card;
+    }
+
+    function folderOptionsHtml(selected) {
+      return appData.folders.map(folder => `<option value="${escapeHtml(folder)}" ${folder === selected ? "selected" : ""}>${escapeHtml(folder)}</option>`).join("");
+    }
+
+    function collectPlaylist(playlist) {
+      if (appData.playlists.some(item => item.communityId === playlist.id)) {
+        document.getElementById("search-notice").textContent = "이 플레이리스트는 이미 나의 서재에 있어요.";
+        return;
+      }
+      // 원본 곡의 YouTube 주소도 복사하므로, 서재로 옮긴 뒤에도 곡 이름을 눌러 열 수 있어요.
+      appData.playlists.unshift({ id: makeId(), communityId: playlist.id, title: playlist.title, book: playlist.book, songs: playlist.songs.map(song => ({ ...song, mood: "" })), emoji: playlist.emoji, cover: "", kind: "collected", folder: DEFAULT_FOLDER, createdAt: Date.now() });
+      if (!persistData()) { appData.playlists.shift(); return; }
+      document.getElementById("search-notice").textContent = `“${playlist.title}”을(를) ‘${DEFAULT_FOLDER}’ 폴더에 담았어요.`;
+      renderExplore(lastExploreResults);
+    }
+
+    function renderFolderOptions() {
+      const select = document.getElementById("create-folder");
+      const previous = select.value;
+      select.innerHTML = folderOptionsHtml(previous || DEFAULT_FOLDER);
+    }
+
+    function renderLibrary() {
+      const filter = document.getElementById("library-folder-filter");
+      const previous = filter.value || "전체 폴더";
+      filter.innerHTML = `<option value="전체 폴더">전체 폴더 (${appData.playlists.length})</option>` + appData.folders.map(folder => `<option value="${escapeHtml(folder)}">📁 ${escapeHtml(folder)} (${appData.playlists.filter(item => item.folder === folder).length})</option>`).join("");
+      filter.value = appData.folders.includes(previous) || previous === "전체 폴더" ? previous : "전체 폴더";
+      const selectedFolder = filter.value;
+      const visible = appData.playlists.filter(item => selectedFolder === "전체 폴더" || item.folder === selectedFolder);
+      const grid = document.getElementById("library-grid");
+      grid.replaceChildren();
+      if (!visible.length) {
+        grid.innerHTML = `<div class="empty-state">${appData.playlists.length ? "이 폴더는 아직 비어 있어요. 카드 메뉴에서 플리를 옮겨 보세요." : "아직 저장한 플레이리스트가 없어요.<br>플리를 만들거나 탐색에서 하나 담아 보세요."}</div>`;
+      } else visible.forEach(playlist => grid.append(makePlaylistCard(playlist, "library")));
+      renderFolderChips();
+    }
+
+    document.getElementById("library-folder-filter").addEventListener("change", renderLibrary);
+    document.getElementById("add-folder-button").addEventListener("click", () => {
+      const notice = document.getElementById("library-notice");
+      const input = document.getElementById("new-folder-name");
+      if (input) { input.focus(); return; }
+      const wrapper = document.createElement("div");
+      wrapper.className = "form-row";
+      wrapper.id = "new-folder-row";
+      wrapper.style.marginTop = "14px";
+      wrapper.innerHTML = '<div class="field"><label for="new-folder-name">새 폴더 이름</label><input id="new-folder-name" type="text" maxlength="30" placeholder="예: 판타지 책들"></div><button class="primary-button" type="button" id="save-folder-button">폴더 저장</button><button class="secondary-button" type="button" id="cancel-folder-button">취소</button>';
+      document.querySelector("#page-library .panel").append(wrapper);
+      wrapper.querySelector("#new-folder-name").focus();
+      wrapper.querySelector("#cancel-folder-button").addEventListener("click", () => wrapper.remove());
+      wrapper.querySelector("#save-folder-button").addEventListener("click", () => {
+        const name = wrapper.querySelector("#new-folder-name").value.trim();
+        if (!name) { notice.textContent = "폴더 이름을 적어 주세요."; return; }
+        if (appData.folders.some(folder => normalize(folder) === normalize(name))) { notice.textContent = "같은 이름의 폴더가 이미 있어요."; return; }
+        appData.folders.push(name);
+        if (!persistData()) { appData.folders.pop(); return; }
+        notice.textContent = `‘${name}’ 폴더를 만들었어요.`;
+        renderLibrary();
+        wrapper.remove();
+      });
+    });
+
+    function renderFolderChips() {
+      const container = document.getElementById("folder-chips");
+      container.replaceChildren();
+      ["전체 폴더", ...appData.folders].forEach(folder => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `folder-chip ${document.getElementById("library-folder-filter").value === folder ? "selected" : ""}`;
+        button.textContent = folder === "전체 폴더" ? `전체 (${appData.playlists.length})` : `📁 ${folder}`;
+        button.addEventListener("click", () => { document.getElementById("library-folder-filter").value = folder; renderLibrary(); });
+        container.append(button);
+      });
+    }
+
+    function movePlaylist(id, folder) {
+      const playlist = appData.playlists.find(item => item.id === id);
+      if (!playlist || !appData.folders.includes(folder)) return;
+      playlist.folder = folder;
+      if (!persistData()) return;
+      document.getElementById("library-notice").textContent = `플레이리스트를 ‘${folder}’ 폴더로 옮겼어요.`;
+      renderLibrary();
+    }
+
+    // 처음 화면을 열 때 폴더 목록도 저장된 내용에 맞춰 준비합니다.
+    renderFolderOptions();
+    renderExplore(lastExploreResults);
+    renderLibrary();
+  </script>
+</body>
+</html>
